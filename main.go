@@ -11,7 +11,7 @@ import (
 type cliCommand struct {
 	name string
 	description string
-	callback func(cfg *config) error
+	callback func(cfg *config, client *pokeapi.Client) error
 }
 type config struct {
 	nextLocUrl *string
@@ -38,7 +38,7 @@ func init() {
 
 }
 
-func helpCommand(cfg *config) error {
+func helpCommand(cfg *config, client *pokeapi.Client) error {
 	fmt.Println(" -----------------------------\n",
 				 "Welcome to the Pokedex!\n",
 				 "-----------------------------\n",
@@ -51,14 +51,14 @@ func helpCommand(cfg *config) error {
 	return nil
 }
 
-func exitCommand(cfg *config) error {
+func exitCommand(cfg *config, client *pokeapi.Client) error {
 	os.Exit(0)
 	return nil
 }
 
 
-func mapCommand(cfg *config) error {
-	resp, err := pokeapi.FetchLocationData(*cfg.nextLocUrl)
+func mapCommand(cfg *config, client *pokeapi.Client) error {
+	resp, err := client.FetchLocationData(*cfg.nextLocUrl)
 	if err != nil {
 		return err
 	}
@@ -70,11 +70,11 @@ func mapCommand(cfg *config) error {
 	return nil
 }
 
-func mapbCommand(cfg *config) error {
+func mapbCommand(cfg *config, client *pokeapi.Client) error {
 	if cfg.prevLocUrl == nil {
 		return errors.New("Err: No previous page exists")
 	}
-	resp, err := pokeapi.FetchLocationData(*cfg.prevLocUrl)
+	resp, err := client.FetchLocationData(*cfg.prevLocUrl)
 	if err != nil {
 		return err
 	}
@@ -86,13 +86,13 @@ func mapbCommand(cfg *config) error {
 	return nil
 }
 
-func interpretCommand(text string, cfg *config) error {
+func interpretCommand(text string, cfg *config, client *pokeapi.Client) error {
 	if text == "" {
 		return nil
 	}
 	for cmd := range cmds {
 		if text == cmd {
-			return cmds[cmd].callback(cfg)
+			return cmds[cmd].callback(cfg, client)
 		}
 	}
 	return errors.New("Err: Unknown command - " + text)
@@ -102,10 +102,11 @@ func main() {
 	in := bufio.NewScanner(os.Stdin)
 	startUrl := pokeapi.GetFirstLocationUrl()
 	cfg := config{&startUrl, nil}
+	client := pokeapi.NewClient()
 	for true {
 		fmt.Printf("PKDX >:")
 		in.Scan()
-		err := interpretCommand(in.Text(), &cfg)
+		err := interpretCommand(in.Text(), &cfg, &client)
 		if err != nil {
 			fmt.Println(err)
 		}
