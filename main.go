@@ -42,12 +42,12 @@ func helpCommand(cfg *config) error {
 	fmt.Println(" -----------------------------\n",
 				 "Welcome to the Pokedex!\n",
 				 "-----------------------------\n",
-				 "Usage:\n")
+				 "Usage:")
 
 	for _,cmd := range cmds {
 		fmt.Println(" -" + cmd.name + ": " + cmd.description)
 	}
-	fmt.Println("\n -----------------------------\n")
+	fmt.Println("\n -----------------------------")
 	return nil
 }
 
@@ -58,7 +58,7 @@ func exitCommand(cfg *config) error {
 
 
 func mapCommand(cfg *config) error {
-	resp, err := pokeapi.FetchMapData(*cfg.nextLocUrl)
+	resp, err := pokeapi.FetchLocationData(*cfg.nextLocUrl)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func mapbCommand(cfg *config) error {
 	if cfg.prevLocUrl == nil {
 		return errors.New("Err: No previous page exists")
 	}
-	resp, err := pokeapi.FetchMapData(*cfg.prevLocUrl)
+	resp, err := pokeapi.FetchLocationData(*cfg.prevLocUrl)
 	if err != nil {
 		return err
 	}
