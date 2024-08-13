@@ -29,7 +29,7 @@ func getBaseUrl() string {
 }
 
 func GetFirstLocationUrl() string {
-	return getBaseUrl() + "location?offset=0&limit=20"
+	return getBaseUrl() + "location-area/?offset=0&limit=20"
 }
 
 func (c *Client) FetchData(url string, data interface{}) error {
