@@ -34,6 +34,9 @@ func init() {
 		"mapb": {
 			name: "mapb", description: "Displays the previous 20 locations", callback: mapbCommand,
 		},
+		"explore": {
+			name: "explore", description: "Displays a list of Pokemon found at a location", callback: exploreCommand,
+		},
 	}
 
 }
@@ -83,6 +86,11 @@ func mapbCommand(cfg *config, client *pokeapi.Client) error {
 	}
 	cfg.nextLocUrl = resp.Next
 	cfg.prevLocUrl = resp.Previous
+	return nil
+}
+
+func exploreCommand(cfg *config, client *pokeapi.Client) error {
+	os.Exit(0)
 	return nil
 }
 
