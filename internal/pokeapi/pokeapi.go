@@ -1,20 +1,22 @@
 package pokeapi
 
 import (
-	"net/http"
-	"time"
 	"fmt"
 	"io"
+	"net/http"
+	"time"
+
 	"github.com/FriskyWombat/pokedex/internal/jsonutil"
 	"github.com/FriskyWombat/pokedex/internal/pokecache"
 )
 
 type Client struct {
 	httpClient http.Client
-	cache pokecache.Cache
+	cache      pokecache.Cache
 }
+
 func NewClient() Client {
-	return Client {
+	return Client{
 		httpClient: http.Client{
 			Timeout: time.Second * 15,
 		},
@@ -37,7 +39,7 @@ func (c *Client) FetchData(url string, data interface{}) error {
 	if ok {
 		err := jsonutil.ParseResponse(val, data)
 		if err != nil {
-			return err 
+			return err
 		}
 		//fmt.Println("Cache hit on url:", url)
 		return nil
@@ -48,7 +50,7 @@ func (c *Client) FetchData(url string, data interface{}) error {
 	}
 	err = jsonutil.ParseResponse(res, data)
 	if err != nil {
-		return err 
+		return err
 	}
 	//fmt.Println("Adding url to cache:", url)
 	c.cache.Add(url, res)
@@ -57,17 +59,16 @@ func (c *Client) FetchData(url string, data interface{}) error {
 
 func (c *Client) FetchDataHTTP(url string) ([]byte, error) {
 	res, err := c.httpClient.Get(url)
-	defer res.Body.Close()
 	if err != nil {
 		return []byte{}, err
-	}	
+	}
+	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return []byte{}, err
 	}
 	if res.StatusCode > 299 {
-		return []byte{}, fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		return []byte{}, fmt.Errorf("response failed with status code: %d and\nbody: %s", res.StatusCode, body)
 	}
 	return body, nil
 }
-

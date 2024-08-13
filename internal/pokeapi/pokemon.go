@@ -1,16 +1,43 @@
 package pokeapi
 
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 
+	"github.com/qeesung/image2ascii/convert"
+)
 
 func (c *Client) FetchPokemonData(name string) (Pokemon, error) {
 	data := Pokemon{}
-	err := c.FetchData(getBaseUrl() + "pokemon/"+name+"/", &data)
+	err := c.FetchData(getBaseUrl()+"pokemon/"+name+"/", &data)
 	return Pokemon(data), err
 }
 
-
-
-
+func (c *Client) PrintPokemonImage(pkmn *Pokemon, convertOptions *convert.Options) error {
+	//returns string path/to/file
+	url := pkmn.Sprites.FrontDefault
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	//open a file for writing
+	file, err := os.Create("/tmp/image.png")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, res.Body)
+	if err != nil {
+		return err
+	}
+	/* Display an image of the caught Pokemon */
+	converter := convert.NewImageConverter()
+	fmt.Println(converter.ImageFile2ASCIIString("/tmp/image.png", convertOptions))
+	return nil
+}
 
 type Pokemon struct {
 	Abilities []struct {
