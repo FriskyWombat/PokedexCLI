@@ -5,7 +5,7 @@ import (
 	"bufio"
 	"os"
 	"errors"
-	"net/http"
+	"github.com/FriskyWombat/pokedex/internal/pokeapi"
 )
 
 type cliCommand struct {
@@ -14,8 +14,8 @@ type cliCommand struct {
 	callback func(cfg *config) error
 }
 type config struct {
-	nextUrl *string
-	prevUrl *string
+	nextLocUrl *string
+	prevLocUrl *string
 }
 
 var cmds map[string]cliCommand = make(map[string]cliCommand)
@@ -56,48 +56,58 @@ func exitCommand(cfg *config) error {
 	return nil
 }
 
-func fetchMapData(url string, cfg *config) error {
-	res, err := http.Get(url)
+
+func mapCommand(cfg *config) error {
+	resp, err := pokeapi.FetchMapData(*cfg.nextLocUrl)
 	if err != nil {
 		return err
 	}
-	data := FetchedData{}
-	err = parseResponse(res, &data)
-	if err != nil {
-		return err
+	for _, text := range resp.Results {
+		fmt.Println(text.Name)
 	}
-	for _, r := range data.Results {
-		fmt.Println(r.Name)
-	}
-	cfg.nextUrl = data.Next
-	cfg.prevUrl = data.Previous
+	cfg.nextLocUrl = resp.Next
+	cfg.prevLocUrl = resp.Previous
 	return nil
 }
 
-func mapCommand(cfg *config) error {
-	return fetchMapData(*cfg.nextUrl, cfg)
-}
-
 func mapbCommand(cfg *config) error {
-	return fetchMapData(*cfg.prevUrl, cfg)
+	if cfg.prevLocUrl == nil {
+		return errors.New("Err: No previous page exists")
+	}
+	resp, err := pokeapi.FetchMapData(*cfg.prevLocUrl)
+	if err != nil {
+		return err
+	}
+	for _, text := range resp.Results {
+		fmt.Println(text.Name)
+	}
+	cfg.nextLocUrl = resp.Next
+	cfg.prevLocUrl = resp.Previous
+	return nil
 }
 
 func interpretCommand(text string, cfg *config) error {
+	if text == "" {
+		return nil
+	}
 	for cmd := range cmds {
 		if text == cmd {
 			return cmds[cmd].callback(cfg)
 		}
 	}
-	return errors.New("Err: Unknown command")
+	return errors.New("Err: Unknown command - " + text)
 }
 
 func main() {
 	in := bufio.NewScanner(os.Stdin)
-	startURL := "https://pokeapi.co/api/v2/location?offset=0&limit=20"
-	cfg := config{&startURL, nil}
+	startUrl := pokeapi.GetFirstLocationUrl()
+	cfg := config{&startUrl, nil}
 	for true {
 		fmt.Printf("PKDX >:")
 		in.Scan()
-		interpretCommand(in.Text(), &cfg)
+		err := interpretCommand(in.Text(), &cfg)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
